@@ -1,8 +1,14 @@
 [package]
 name = "mousepage"
+description = "control your computer mouse with your phone, via a web page"
+repository = "https://github.com/bburdette/mousepage"
 version = "0.1.0"
 authors = ["Ben Burdette <bburdette@gmail.com>"]
 edition = "2018"
+license = "BSD-3"
+
+[badges]
+maintenance = { status = "experimental" }
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
