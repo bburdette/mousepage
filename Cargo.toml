@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 inputbot = "0.4.0"
 touchpage = "0.2.0"
+serde_json = "0.7.0"
+failure = "0.1.1"
