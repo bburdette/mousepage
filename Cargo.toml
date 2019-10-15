@@ -5,7 +5,7 @@ repository = "https://github.com/bburdette/mousepage"
 version = "0.1.0"
 authors = ["Ben Burdette <bburdette@gmail.com>"]
 edition = "2018"
-license = "BSD-3"
+license = "BSD-3-Clause"
 
 [badges]
 maintenance = { status = "experimental" }
