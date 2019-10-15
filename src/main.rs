@@ -3,6 +3,8 @@ extern crate touchpage;
 
 use failure::err_msg;
 use failure::Error as FError;
+use inputbot::{MouseButton, MouseCursor};
+use std::time::SystemTime;
 use touchpage::control_nexus::{ControlNexus, ControlUpdateProcessor};
 use touchpage::control_updates as cu;
 use touchpage::controls::Orientation::{Horizontal, Vertical};
@@ -10,8 +12,6 @@ use touchpage::guibuilder as G;
 use touchpage::json as J;
 use touchpage::webserver;
 use touchpage::websocketserver;
-
-use inputbot::{MouseButton, MouseCursor};
 
 fn main() {
   let mbhtml = None;
@@ -30,7 +30,10 @@ fn main() {
   };
 
   // the 'ControlUpdateProcessor' does something when an update message comes in.
-  let cup = MouseUpdate { last_loc: None };
+  let cup = MouseUpdate {
+    last_loc: None,
+    press_start: None,
+  };
 
   // start the websocket server.  mandatory for receiving control messages.
   match websocketserver::start(guijson.as_str(), Box::new(cup), "0.0.0.0", "9001", false) {
@@ -45,18 +48,20 @@ fn main() {
 
 pub struct MouseUpdate {
   last_loc: Option<(f32, f32)>,
+  press_start: Option<SystemTime>,
 }
 
 impl ControlUpdateProcessor for MouseUpdate {
   fn on_update_received(&mut self, update: &cu::UpdateMsg, cn: &mut ControlNexus) -> () {
     let mousemult = 1200.0;
+    let click_duration = 200;
     // println!("control update: {:?}", update);
     match update {
       cu::UpdateMsg::XY {
         control_id: _,
         state,
         location,
-        label: _ ,
+        label: _,
       } => {
         match location {
           Some((x, y)) => match self.last_loc {
@@ -76,8 +81,46 @@ impl ControlUpdateProcessor for MouseUpdate {
           None => (),
         };
         match state {
-          Some(cu::PressState::Unpressed) => self.last_loc = None,
-          _ => (),
+          Some(cu::PressState::Pressed) => match self.press_start {
+            None => {
+              println!("setting press_start");
+              self.press_start = Some(SystemTime::now());
+            }
+            _ => (),
+          },
+
+          None => match self.press_start {
+            None => {
+              println!("setting press_start");
+              self.press_start = Some(SystemTime::now());
+            }
+            _ => (),
+          },
+
+          Some(cu::PressState::Unpressed) => {
+            // reset last location, we'll start that again next press.
+            self.last_loc = None;
+
+            // check the press duration.  if its short enough we'll do a
+            // button press.
+            match self.press_start {
+              Some(lu) => {
+                let now = SystemTime::now();
+                match now.duration_since(lu) {
+                  Ok(duration) => {
+                    println!("press duration: {}", duration.as_millis());
+                    if duration.as_millis() < click_duration {
+                      MouseButton::LeftButton.press();
+                      MouseButton::LeftButton.release();
+                    }
+                  }
+                  Err(_) => (),
+                }
+              }
+              _ => (),
+            }
+            self.press_start = None;
+          }
         };
       }
       cu::UpdateMsg::Button {
@@ -138,5 +181,3 @@ const ERRORUI: &'static str = r##"
        , "label": "error loading controls!"
     }
 }"##;
-
-
