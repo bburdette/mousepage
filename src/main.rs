@@ -3,7 +3,7 @@ extern crate touchpage;
 
 use failure::err_msg;
 use failure::Error as FError;
-use inputbot::{MouseButton, MouseCursor};
+use inputbot::{MouseButton, MouseCursor, MouseWheel};
 use std::time::SystemTime;
 use touchpage::control_nexus::{ControlNexus, ControlUpdateProcessor};
 use touchpage::control_updates as cu;
@@ -33,6 +33,7 @@ fn main() {
   let cup = MouseUpdate {
     last_loc: None,
     press_start: None,
+    scroll_mode: false,
   };
 
   // start the websocket server.  mandatory for receiving control messages.
@@ -49,6 +50,7 @@ fn main() {
 pub struct MouseUpdate {
   last_loc: Option<(f32, f32)>,
   press_start: Option<SystemTime>,
+  scroll_mode: bool,
 }
 
 impl ControlUpdateProcessor for MouseUpdate {
@@ -66,12 +68,17 @@ impl ControlUpdateProcessor for MouseUpdate {
         match location {
           Some((x, y)) => match self.last_loc {
             Some((lx, ly)) => {
-              let nx = x - lx;
-              let ny = y - ly;
-              MouseCursor.move_rel(
-                (nx * mousemult).round() as i32,
-                (ny * mousemult).round() as i32,
-              );
+              let nx = (mousemult * (x - lx)).round() as i32;
+              let ny = (mousemult * (y - ly)).round() as i32;
+              if self.scroll_mode {
+                let nx = 50 * nx;
+                let ny = 50 * ny;
+                println!("scrolling: {},{}", nx, ny);
+                MouseWheel.scroll_hor(nx);
+                MouseWheel.scroll_ver(ny);
+              } else {
+                MouseCursor.move_rel(nx, ny);
+              };
               self.last_loc = Some((*x, *y));
             }
             None => {
@@ -132,19 +139,27 @@ impl ControlUpdateProcessor for MouseUpdate {
           _ => false,
         };
         cn.get_name(control_id).map(|name| {
-          if name == "b0" {
+          if name == "LB" {
             // left mouse.
             if pr {
               MouseButton::LeftButton.press()
             } else {
               MouseButton::LeftButton.release()
             };
-          } else if name == "b1" {
+          } else if name == "RB" {
             // right mouse.
             if pr {
               MouseButton::RightButton.press()
             } else {
               MouseButton::RightButton.release()
+            };
+          } else if name == "S" {
+            // scroll.
+            if pr {
+              self.scroll_mode = true;
+              self.press_start = None;
+            } else {
+              self.scroll_mode = false;
             };
           };
         });
@@ -161,8 +176,9 @@ fn build_gui() -> Result<G::Gui, FError> {
   gui
     .add_sizer(Vertical, Some(vec![0.1, 0.5]))?
     .add_sizer(Horizontal, None)?
-    .add_button("b0".to_string(), None)?
-    .add_button("b1".to_string(), None)?
+    .add_button("LB".to_string(), Some("Left".to_string()))?
+    .add_button("S".to_string(), Some("Scroll".to_string()))?
+    .add_button("RB".to_string(), Some("Right".to_string()))?
     .end_sizer()?
     .add_xy("xy".to_string(), Some("xy".to_string()))?
     .end_sizer()?
