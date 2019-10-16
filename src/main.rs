@@ -3,7 +3,6 @@ extern crate touchpage;
 
 use failure::err_msg;
 use failure::Error as FError;
-use inputbot::{MouseButton, MouseCursor, MouseWheel};
 use std::time::SystemTime;
 use touchpage::control_nexus::{ControlNexus, ControlUpdateProcessor};
 use touchpage::control_updates as cu;
@@ -12,6 +11,11 @@ use touchpage::guibuilder as G;
 use touchpage::json as J;
 use touchpage::webserver;
 use touchpage::websocketserver;
+
+#[cfg(target_os = "linux")]
+use inputbot::{MouseButton, MouseCursor};
+#[cfg(target_os = "windows")]
+use inputbot::{MouseButton, MouseCursor, MouseWheel};
 
 fn main() {
   let mbhtml = None;
