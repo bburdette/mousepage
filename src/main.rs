@@ -78,15 +78,8 @@ impl ControlUpdateProcessor for MouseUpdate {
                 let scrollthres = 10;
                 #[cfg(target_os = "linux")]
                 {
-                  if i32::abs(ny) > scrollthres {
-                    if ny < 0 {
-                      MouseButton::OtherButton(4).press();
-                      MouseButton::OtherButton(4).release();
-                    } else {
-                      MouseButton::OtherButton(5).press();
-                      MouseButton::OtherButton(5).release();
-                    }
-                  }
+                  let mut nlx = lx;
+                  let mut nly = ly;
                   if i32::abs(nx) > scrollthres {
                     if nx < 0 {
                       MouseButton::OtherButton(6).press();
@@ -95,18 +88,33 @@ impl ControlUpdateProcessor for MouseUpdate {
                       MouseButton::OtherButton(7).press();
                       MouseButton::OtherButton(7).release();
                     }
+                    nlx = *x;
                   }
+
+                  if i32::abs(ny) > scrollthres {
+                    if ny < 0 {
+                      MouseButton::OtherButton(4).press();
+                      MouseButton::OtherButton(4).release();
+                    } else {
+                      MouseButton::OtherButton(5).press();
+                      MouseButton::OtherButton(5).release();
+                    }
+
+                    nly = *y;
+                  }
+                  self.last_loc = Some((nlx, nly));
                 }
 
                 #[cfg(target_os = "windows")]
                 {
                   MouseWheel.scroll_hor(nx);
                   MouseWheel.scroll_ver(ny);
+                  self.last_loc = Some((*x, *y));
                 }
               } else {
                 MouseCursor.move_rel(nx, ny);
+                self.last_loc = Some((*x, *y));
               };
-              self.last_loc = Some((*x, *y));
             }
             None => {
               self.last_loc = Some((*x, *y));
