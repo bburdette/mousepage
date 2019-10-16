@@ -71,39 +71,34 @@ impl ControlUpdateProcessor for MouseUpdate {
               let nx = (mousemult * (x - lx)).round() as i32;
               let ny = (mousemult * (y - ly)).round() as i32;
               if self.scroll_mode {
-                // if nx < 0 {
-                //       MouseButton::OtherButton(6).press();
-                //       MouseButton::OtherButton(6).release();
-                // }
-                // else
-                // {
-                //       MouseButton::OtherButton(7).press();
-                //       MouseButton::OtherButton(7).release();
-                // }
                 let scrollthres = 10;
-                if i32::abs(ny) > scrollthres {
-                  if ny < 0 {
-                    MouseButton::OtherButton(4).press();
-                    MouseButton::OtherButton(4).release();
-                  } else {
-                    MouseButton::OtherButton(5).press();
-                    MouseButton::OtherButton(5).release();
+                #[cfg(target_os = "linux")]
+                {
+                  if i32::abs(ny) > scrollthres {
+                    if ny < 0 {
+                      MouseButton::OtherButton(4).press();
+                      MouseButton::OtherButton(4).release();
+                    } else {
+                      MouseButton::OtherButton(5).press();
+                      MouseButton::OtherButton(5).release();
+                    }
+                  }
+                  if i32::abs(nx) > scrollthres {
+                    if nx < 0 {
+                      MouseButton::OtherButton(6).press();
+                      MouseButton::OtherButton(6).release();
+                    } else {
+                      MouseButton::OtherButton(7).press();
+                      MouseButton::OtherButton(7).release();
+                    }
                   }
                 }
-                if i32::abs(nx) > scrollthres {
-                  if nx < 0 {
-                    MouseButton::OtherButton(6).press();
-                    MouseButton::OtherButton(6).release();
-                  } else {
-                    MouseButton::OtherButton(7).press();
-                    MouseButton::OtherButton(7).release();
-                  }
+
+                #[cfg(target_os = "windows")]
+                {
+                  MouseWheel.scroll_hor(nx);
+                  MouseWheel.scroll_ver(ny);
                 }
-              // let nx = 50 * nx;
-              // let ny = 50 * ny;
-              // println!("scrolling: {},{}", nx, ny);
-              // MouseWheel.scroll_hor(nx);
-              // MouseWheel.scroll_ver(ny);
               } else {
                 MouseCursor.move_rel(nx, ny);
               };
