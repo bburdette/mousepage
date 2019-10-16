@@ -117,7 +117,6 @@ impl ControlUpdateProcessor for MouseUpdate {
         match state {
           Some(cu::PressState::Pressed) => match self.press_start {
             None => {
-              println!("setting press_start");
               self.press_start = Some(SystemTime::now());
             }
             _ => (),
@@ -125,7 +124,6 @@ impl ControlUpdateProcessor for MouseUpdate {
 
           None => match self.press_start {
             None => {
-              println!("setting press_start");
               self.press_start = Some(SystemTime::now());
             }
             _ => (),
@@ -142,7 +140,7 @@ impl ControlUpdateProcessor for MouseUpdate {
                 let now = SystemTime::now();
                 match now.duration_since(lu) {
                   Ok(duration) => {
-                    println!("press duration: {}", duration.as_millis());
+                    // println!("press duration: {}", duration.as_millis());
                     if duration.as_millis() < click_duration {
                       MouseButton::LeftButton.press();
                       MouseButton::LeftButton.release();
