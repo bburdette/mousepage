@@ -13,7 +13,8 @@ maintenance = { status = "experimental" }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-inputbot = "0.4.0"
+# inputbot = "0.4.0"
+inputbot = { path = "../../op-code/InputBot/"}
 touchpage = "0.2.0"
 serde_json = "0.7.0"
 failure = "0.1.1"

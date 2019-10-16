@@ -56,7 +56,7 @@ pub struct MouseUpdate {
 impl ControlUpdateProcessor for MouseUpdate {
   fn on_update_received(&mut self, update: &cu::UpdateMsg, cn: &mut ControlNexus) -> () {
     let mousemult = 1200.0;
-    let click_duration = 200;
+    let click_duration = 100;
     // println!("control update: {:?}", update);
     match update {
       cu::UpdateMsg::XY {
@@ -71,11 +71,39 @@ impl ControlUpdateProcessor for MouseUpdate {
               let nx = (mousemult * (x - lx)).round() as i32;
               let ny = (mousemult * (y - ly)).round() as i32;
               if self.scroll_mode {
-                let nx = 50 * nx;
-                let ny = 50 * ny;
-                println!("scrolling: {},{}", nx, ny);
-                MouseWheel.scroll_hor(nx);
-                MouseWheel.scroll_ver(ny);
+                // if nx < 0 {
+                //       MouseButton::OtherButton(6).press();
+                //       MouseButton::OtherButton(6).release();
+                // }
+                // else
+                // {
+                //       MouseButton::OtherButton(7).press();
+                //       MouseButton::OtherButton(7).release();
+                // }
+                let scrollthres = 10;
+                if i32::abs(ny) > scrollthres {
+                  if ny < 0 {
+                    MouseButton::OtherButton(4).press();
+                    MouseButton::OtherButton(4).release();
+                  } else {
+                    MouseButton::OtherButton(5).press();
+                    MouseButton::OtherButton(5).release();
+                  }
+                }
+                if i32::abs(nx) > scrollthres {
+                  if nx < 0 {
+                    MouseButton::OtherButton(6).press();
+                    MouseButton::OtherButton(6).release();
+                  } else {
+                    MouseButton::OtherButton(7).press();
+                    MouseButton::OtherButton(7).release();
+                  }
+                }
+              // let nx = 50 * nx;
+              // let ny = 50 * ny;
+              // println!("scrolling: {},{}", nx, ny);
+              // MouseWheel.scroll_hor(nx);
+              // MouseWheel.scroll_ver(ny);
               } else {
                 MouseCursor.move_rel(nx, ny);
               };
