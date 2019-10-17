@@ -810,13 +810,13 @@ dependencies = [
 
 [[package]]
 name = "mousepage"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "inputbot 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
- "touchpage 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "touchpage 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1658,7 +1658,7 @@ dependencies = [
 
 [[package]]
 name = "touchpage"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "actix 0.7.9 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2154,7 +2154,7 @@ dependencies = [
 "checksum tokio-udp 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "f02298505547f73e60f568359ef0d016d5acd6e830ab9bc7c4a5b3403440121b"
 "checksum tokio-uds 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)" = "037ffc3ba0e12a0ab4aca92e5234e0dedeb48fddf6ccd260f1f150a36a9f2445"
 "checksum toml 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)" = "758664fc71a3a69038656bee8b6be6477d2a6c315a6b81f7081f591bffa4111f"
-"checksum touchpage 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "77f7c0297332e1611fbe1828f61fbc7abad5b9a3612742cf4f26629f6ab9e529"
+"checksum touchpage 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "c1dfbaa73e45e9e9afa7dc329c25870f93e55dff4c60d864de959f6c8354dfd5"
 "checksum tower-service 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b32f72af77f1bfe3d3d4da8516a238ebe7039b51dd8637a09841ac7f16d2c987"
 "checksum traitobject 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "efd1f82c56340fdf16f2a953d7bda4f8fdffba13d93b00844c25572110b26079"
 "checksum trust-dns-proto 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0838272e89f1c693b4df38dc353412e389cf548ceed6f9fd1af5a8d6e0e7cf74"
