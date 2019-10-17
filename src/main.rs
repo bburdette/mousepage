@@ -4,7 +4,6 @@ extern crate touchpage;
 use std::fs::File;
 use std::io::Read;
 use std::io::Write;
-// use std::io::{Error, ErrorKind};
 use std::path::Path;
 
 use failure::err_msg;
@@ -26,32 +25,46 @@ use inputbot::{MouseButton, MouseCursor, MouseWheel};
 extern crate serde;
 extern crate serde_json;
 use serde::{Deserialize, Serialize};
-// use serde_json::Value;
 
 #[derive(Deserialize, Serialize, Debug)]
 struct Prefs {
   xmult: f32,
   ymult: f32,
   max_tap_duration: u128,
+  show_press_duration: bool,
   scroll_threshold: i32,
 }
 
+fn default_prefs() -> Prefs {
+  Prefs {
+    xmult: 1000.0,
+    ymult: 1000.0,
+    max_tap_duration: 100,
+    show_press_duration: false,
+    scroll_threshold: 10,
+  }
+}
+
 fn main() {
-  let p = load_string("mousepage.config")
-    .ok()
-    .and_then(|s| serde_json::from_str(s.as_str()).ok())
-    .unwrap_or(Prefs {
-      xmult: 1000.0,
-      ymult: 1000.0,
-      max_tap_duration: 100,
-      scroll_threshold: 10,
-    });
+  let p = match load_string("mousepage.config") {
+    Ok(s) => match serde_json::from_str(s.as_str()) {
+      Ok(p) => p,
+      Err(e) => {
+        println!("error loading prefs json: {}", e);
+        default_prefs()
+      }
+    },
+    Err(e) => {
+      println!("'mousepage.config' file not loaded, using default prefs");
+      println!("error {}", e);
+      default_prefs()
+    }
+  };
 
-  println!("prefs: {:?}", p);
-
-  serde_json::to_string_pretty(&p).map(|s| write_string(s.as_str(), "blah.txt"));
-
-  let mbhtml = None;
+  print!(
+    "current prefs: {}\n",
+    serde_json::to_string_pretty(&p).unwrap_or("error serializing prefs".to_string())
+  );
 
   let rootv: Result<String, FError> = build_gui()
     .and_then(|gui| gui.to_root())
@@ -82,7 +95,7 @@ fn main() {
 
   // start the webserver.  not necessary if you want to serve up the html with your
   // own server.
-  webserver::start("0.0.0.0", "8000", "9001", mbhtml, true);
+  webserver::start("0.0.0.0", "8000", "9001", None, true);
 }
 
 pub struct MouseUpdate {
@@ -180,7 +193,9 @@ impl ControlUpdateProcessor for MouseUpdate {
                 let now = SystemTime::now();
                 match now.duration_since(lu) {
                   Ok(duration) => {
-                    // println!("press duration: {}", duration.as_millis());
+                    if self.prefs.show_press_duration {
+                      println!("press duration: {}", duration.as_millis());
+                    }
                     if duration.as_millis() < self.prefs.max_tap_duration {
                       MouseButton::LeftButton.press();
                       MouseButton::LeftButton.release();
@@ -235,9 +250,9 @@ impl ControlUpdateProcessor for MouseUpdate {
   }
 }
 
-// build the UI with a series of rust function calls.
+// mousepage UI
 fn build_gui() -> Result<G::Gui, FError> {
-  let mut gui = G::Gui::new_gui("test".to_string());
+  let mut gui = G::Gui::new_gui("mousepage".to_string());
   gui
     .add_sizer(Vertical, Some(vec![0.1, 0.5]))?
     .add_sizer(Horizontal, None)?
@@ -252,7 +267,6 @@ fn build_gui() -> Result<G::Gui, FError> {
   Ok(gui)
 }
 
-// you can also specify the controls in json, like so.
 const ERRORUI: &'static str = r##"
 {
   "title": "test",
