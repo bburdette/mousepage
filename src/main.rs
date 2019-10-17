@@ -1,6 +1,12 @@
 extern crate inputbot;
 extern crate touchpage;
 
+use std::fs::File;
+use std::io::Read;
+use std::io::Write;
+// use std::io::{Error, ErrorKind};
+use std::path::Path;
+
 use failure::err_msg;
 use failure::Error as FError;
 use std::time::SystemTime;
@@ -17,7 +23,34 @@ use inputbot::{MouseButton, MouseCursor};
 #[cfg(target_os = "windows")]
 use inputbot::{MouseButton, MouseCursor, MouseWheel};
 
+extern crate serde;
+extern crate serde_json;
+use serde::{Deserialize, Serialize};
+// use serde_json::Value;
+
+#[derive(Deserialize, Serialize, Debug)]
+struct Prefs {
+  xmult: f32,
+  ymult: f32,
+  max_tap_duration: u128,
+  scroll_threshold: i32,
+}
+
 fn main() {
+  let p = load_string("mousepage.config")
+    .ok()
+    .and_then(|s| serde_json::from_str(s.as_str()).ok())
+    .unwrap_or(Prefs {
+      xmult: 1000.0,
+      ymult: 1000.0,
+      max_tap_duration: 100,
+      scroll_threshold: 10,
+    });
+
+  println!("prefs: {:?}", p);
+
+  serde_json::to_string_pretty(&p).map(|s| write_string(s.as_str(), "blah.txt"));
+
   let mbhtml = None;
 
   let rootv: Result<String, FError> = build_gui()
@@ -38,6 +71,7 @@ fn main() {
     last_loc: None,
     press_start: None,
     scroll_mode: false,
+    prefs: p,
   };
 
   // start the websocket server.  mandatory for receiving control messages.
@@ -55,12 +89,11 @@ pub struct MouseUpdate {
   last_loc: Option<(f32, f32)>,
   press_start: Option<SystemTime>,
   scroll_mode: bool,
+  prefs: Prefs,
 }
 
 impl ControlUpdateProcessor for MouseUpdate {
   fn on_update_received(&mut self, update: &cu::UpdateMsg, cn: &mut ControlNexus) -> () {
-    let mousemult = 1200.0;
-    let click_duration = 100;
     // println!("control update: {:?}", update);
     match update {
       cu::UpdateMsg::XY {
@@ -72,15 +105,14 @@ impl ControlUpdateProcessor for MouseUpdate {
         match location {
           Some((x, y)) => match self.last_loc {
             Some((lx, ly)) => {
-              let nx = (mousemult * (x - lx)).round() as i32;
-              let ny = (mousemult * (y - ly)).round() as i32;
+              let nx = (self.prefs.xmult * (x - lx)).round() as i32;
+              let ny = (self.prefs.ymult * (y - ly)).round() as i32;
               if self.scroll_mode {
-                let scrollthres = 10;
                 #[cfg(target_os = "linux")]
                 {
                   let mut nlx = lx;
                   let mut nly = ly;
-                  if i32::abs(nx) > scrollthres {
+                  if i32::abs(nx) > self.prefs.scroll_threshold {
                     if nx < 0 {
                       MouseButton::OtherButton(6).press();
                       MouseButton::OtherButton(6).release();
@@ -91,7 +123,7 @@ impl ControlUpdateProcessor for MouseUpdate {
                     nlx = *x;
                   }
 
-                  if i32::abs(ny) > scrollthres {
+                  if i32::abs(ny) > self.prefs.scroll_threshold {
                     if ny < 0 {
                       MouseButton::OtherButton(4).press();
                       MouseButton::OtherButton(4).release();
@@ -149,7 +181,7 @@ impl ControlUpdateProcessor for MouseUpdate {
                 match now.duration_since(lu) {
                   Ok(duration) => {
                     // println!("press duration: {}", duration.as_millis());
-                    if duration.as_millis() < click_duration {
+                    if duration.as_millis() < self.prefs.max_tap_duration {
                       MouseButton::LeftButton.press();
                       MouseButton::LeftButton.release();
                     }
@@ -230,3 +262,20 @@ const ERRORUI: &'static str = r##"
        , "label": "error loading controls!"
     }
 }"##;
+
+fn load_string(file_name: &str) -> Result<String, Box<dyn std::error::Error>> {
+  let path = &Path::new(&file_name);
+  let mut inf = File::open(path)?;
+  let mut result = String::new();
+  inf.read_to_string(&mut result)?;
+  Ok(result)
+}
+
+fn write_string(text: &str, file_name: &str) -> Result<(), Box<dyn std::error::Error>> {
+  let path = &Path::new(&file_name);
+  let mut inf = File::create(path)?;
+  match inf.write(text.as_bytes()) {
+    Ok(_) => Ok(()),
+    Err(e) => Err(Box::new(e)),
+  }
+}
