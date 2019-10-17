@@ -1,13 +1,13 @@
 extern crate inputbot;
 extern crate touchpage;
 
+use failure::err_msg;
+use failure::Error as FError;
+use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::io::Write;
 use std::path::Path;
-
-use failure::err_msg;
-use failure::Error as FError;
 use std::time::SystemTime;
 use touchpage::control_nexus::{ControlNexus, ControlUpdateProcessor};
 use touchpage::control_updates as cu;
@@ -46,17 +46,64 @@ fn default_prefs() -> Prefs {
 }
 
 fn main() {
-  let p = match load_string("mousepage.config") {
-    Ok(s) => match serde_json::from_str(s.as_str()) {
-      Ok(p) => p,
+  // read in the settings json.
+  let args = env::args();
+  let mut iter = args.skip(1); // skip the program name
+  let mut prefs_filename = None;
+  match iter.next() {
+    Some(s1) => match s1.as_str() {
+      "--help" => {
+        println!("usage:");
+        println!("mousepage");
+        println!("mousepage --help");
+        println!("mousepage <prefs filename>");
+        println!("mousepage --writeprefs <filename>");
+        return;
+      }
+      "--writeprefs" => match iter.next() {
+        Some(filename) => {
+          let p = default_prefs();
+          match write_string(
+            serde_json::to_string_pretty(&p)
+              .unwrap_or("error serializing prefs".to_string())
+              .as_str(),
+            filename.as_str(),
+          ) {
+            Err(e) => println!("error writing prefs file: {:?}", e),
+            _ => println!("wrote default prefs to {}", filename),
+          }
+
+          return;
+        }
+        None => {
+          println!("no filename supplied for --writeprefs option");
+          return;
+        }
+      },
+      pf => {
+        prefs_filename = Some(pf.to_string());
+      }
+    },
+    _ => (),
+  }
+
+  let p = match prefs_filename {
+    Some(pf) => match load_string(pf.as_str()) {
+      Ok(s) => match serde_json::from_str(s.as_str()) {
+        Ok(p) => p,
+        Err(e) => {
+          println!("error loading prefs json: {}", e);
+          default_prefs()
+        }
+      },
       Err(e) => {
-        println!("error loading prefs json: {}", e);
+        println!("prefs file \"{}\" not loaded, using defaults", pf);
+        println!("error {}", e);
         default_prefs()
       }
     },
-    Err(e) => {
-      println!("'mousepage.config' file not loaded, using default prefs");
-      println!("error {}", e);
+    None => {
+      println!("no prefs file specified, using defaults");
       default_prefs()
     }
   };
