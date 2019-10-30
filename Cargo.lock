@@ -810,7 +810,7 @@ dependencies = [
 
 [[package]]
 name = "mousepage"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "inputbot 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
