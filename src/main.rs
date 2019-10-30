@@ -33,6 +33,8 @@ struct Prefs {
   max_tap_duration: u128,
   show_press_duration: bool,
   scroll_threshold: i32,
+  html_port: i32,
+  websocket_port: i32,
 }
 
 fn default_prefs() -> Prefs {
@@ -42,6 +44,8 @@ fn default_prefs() -> Prefs {
     max_tap_duration: 100,
     show_press_duration: false,
     scroll_threshold: 10,
+    html_port: 8000,
+    websocket_port: 9000,
   }
 }
 
@@ -126,6 +130,9 @@ fn main() {
     }
   };
 
+  let hp = p.html_port.to_string();
+  let wp = p.websocket_port.to_string();
+
   // the 'ControlUpdateProcessor' does something when an update message comes in.
   let cup = MouseUpdate {
     last_loc: None,
@@ -135,14 +142,20 @@ fn main() {
   };
 
   // start the websocket server.  mandatory for receiving control messages.
-  match websocketserver::start(guijson.as_str(), Box::new(cup), "0.0.0.0", "9001", false) {
+  match websocketserver::start(
+    guijson.as_str(),
+    Box::new(cup),
+    "0.0.0.0",
+    wp.as_str(),
+    false,
+  ) {
     Ok(_) => (),
     Err(e) => println!("error starting websocket server: {},", e),
   }
 
   // start the webserver.  not necessary if you want to serve up the html with your
   // own server.
-  webserver::start("0.0.0.0", "8000", "9001", None, true);
+  webserver::start("0.0.0.0", hp.as_str(), wp.as_str(), None, true);
 }
 
 pub struct MouseUpdate {
