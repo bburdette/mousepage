@@ -18,9 +18,9 @@ use touchpage::webserver;
 use touchpage::websocketserver;
 
 #[cfg(target_os = "linux")]
-use inputbot::{MouseButton, MouseCursor};
+use inputbot::{MouseButton, MouseCursor, KeybdKey};
 #[cfg(target_os = "windows")]
-use inputbot::{MouseButton, MouseCursor, MouseWheel};
+use inputbot::{MouseButton, MouseCursor, MouseWheel, KeybdKey};
 
 extern crate serde;
 extern crate serde_json;
@@ -301,6 +301,28 @@ impl ControlUpdateProcessor for MouseUpdate {
             } else {
               self.scroll_mode = false;
             };
+          } else if name == "CZ" {
+            if pr {
+               KeybdKey::LControlKey.press();
+               KeybdKey::ZKey.press();
+            } else {
+               KeybdKey::ZKey.release();
+               KeybdKey::LControlKey.release();
+            }
+          } else if name == "SR" {
+            if pr {
+               KeybdKey::LShiftKey.press();
+               KeybdKey::RKey.press();
+            } else {
+               KeybdKey::RKey.release();
+               KeybdKey::LShiftKey.release();
+            }
+          } else if name == "Space" {
+            if pr {
+               KeybdKey::SpaceKey.press();
+            } else {
+               KeybdKey::SpaceKey.release();
+            }
           };
         });
         ()
@@ -314,13 +336,18 @@ impl ControlUpdateProcessor for MouseUpdate {
 fn build_gui() -> Result<G::Gui, FError> {
   let mut gui = G::Gui::new_gui("mousepage".to_string());
   gui
-    .add_sizer(Vertical, Some(vec![0.1, 0.5]))?
+    .add_sizer(Vertical, Some(vec![0.1, 0.5, 0.1]))?
     .add_sizer(Horizontal, None)?
     .add_button("LB".to_string(), Some("Left".to_string()))?
     .add_button("S".to_string(), Some("Scroll".to_string()))?
     .add_button("RB".to_string(), Some("Right".to_string()))?
     .end_sizer()?
     .add_xy("xy".to_string(), Some("xy".to_string()))?
+    .add_sizer(Horizontal, None)?
+    .add_button("CZ".to_string(), Some("Undo".to_string()))?
+    .add_button("SR".to_string(), Some("Rec New".to_string()))?
+    .add_button("Space".to_string(), Some("Play/Stop".to_string()))?
+    .end_sizer()?
     .end_sizer()?
     .set_color(G::Color::Controls, "001F00")
     .set_color(G::Color::Text, "1F0000");
