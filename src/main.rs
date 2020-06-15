@@ -101,7 +101,7 @@ fn main() {
       Ok(s) => match serde_lexpr::from_str(s.as_str()) {
         Ok(p) => p,
         Err(e) => {
-          println!("error loading prefs json: {}", e);
+          println!("error loading prefs: {}", e);
           default_prefs()
         }
       },
