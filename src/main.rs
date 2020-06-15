@@ -16,6 +16,7 @@ use touchpage::guibuilder as G;
 use touchpage::json as J;
 use touchpage::webserver;
 use touchpage::websocketserver;
+// use serde_lexpr::{to_string_pretty, from_str}
 
 #[cfg(target_os = "linux")]
 use inputbot::{MouseButton, MouseCursor, KeybdKey};
@@ -24,13 +25,14 @@ use inputbot::{MouseButton, MouseCursor, MouseWheel, KeybdKey};
 
 extern crate serde;
 extern crate serde_json;
+extern crate serde_lexpr;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
 struct Prefs {
   xmult: f32,
   ymult: f32,
-  max_tap_duration: u128,
+  max_tap_duration: u32,
   show_press_duration: bool,
   scroll_threshold: i32,
   html_port: i32,
@@ -67,17 +69,20 @@ fn main() {
       "--writeprefs" => match iter.next() {
         Some(filename) => {
           let p = default_prefs();
-          match write_string(
-            serde_json::to_string_pretty(&p)
-              .unwrap_or("error serializing prefs".to_string())
-              .as_str(),
-            filename.as_str(),
-          ) {
-            Err(e) => println!("error writing prefs file: {:?}", e),
-            _ => println!("wrote default prefs to {}", filename),
+          match serde_lexpr::to_string(&p) {
+            Err(e) => {
+              println!("error converting prefs to s-expression: {:?}", e);
+              return;
+              }
+            Ok(s) => {
+              match write_string(s.as_str(), filename.as_str())
+              {
+                Err(e) => println!("error writing prefs file: {:?}", e),
+                _ => println!("wrote default prefs to {}", filename),
+              }
+              return;
+            }
           }
-
-          return;
         }
         None => {
           println!("no filename supplied for --writeprefs option");
@@ -93,7 +98,7 @@ fn main() {
 
   let p = match prefs_filename {
     Some(pf) => match load_string(pf.as_str()) {
-      Ok(s) => match serde_json::from_str(s.as_str()) {
+      Ok(s) => match serde_lexpr::from_str(s.as_str()) {
         Ok(p) => p,
         Err(e) => {
           println!("error loading prefs json: {}", e);
@@ -256,7 +261,7 @@ impl ControlUpdateProcessor for MouseUpdate {
                     if self.prefs.show_press_duration {
                       println!("press duration: {}", duration.as_millis());
                     }
-                    if duration.as_millis() < self.prefs.max_tap_duration {
+                    if duration.as_millis() < self.prefs.max_tap_duration.into() {
                       MouseButton::LeftButton.press();
                       MouseButton::LeftButton.release();
                     }
