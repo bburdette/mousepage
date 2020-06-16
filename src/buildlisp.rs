@@ -1,66 +1,86 @@
-pub struct LispState
-{
+// use touchpage::controls::Orientation::{Horizontal, Vertical};
+// use touchpage::controls::Orientation;
+use touchpage::guibuilder as G;
+use serde::{Deserialize, Serialize, Deserializer, Serializer};
+
+pub struct LispState {
   prefs: Prefs,
-  gui: Option<Gui>,
+  gui: Option<G::Gui>,
 }
 
 pub trait LispCmd {
-  pub fn Execute(LispState) -> Result<String, LispState>
+  fn execute(state: LispState) -> Result<String, LispState>;
 }
 
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Prefs {
+  pub xmult: f32,
+  pub ymult: f32,
+  pub max_tap_duration: u32,
+  pub show_press_duration: bool,
+  pub scroll_threshold: i32,
+  pub html_port: i32,
+  pub websocket_port: i32,
+}
+
+pub struct SetPrefs {
   prefs: Prefs,
 }
 
-pub struct new_gui {
+#[derive(Deserialize, Serialize, Debug)]
+enum Orientation {
+  Horizontal,
+  Vertical,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub enum Color {
+  Controls,
+  Labels,
+  Text,
+  Pressed,
+  Unpressed,
+  Background,
+}
+
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct NewGui {
   title: String,
   cmds: Vec<ControlCmd>,
 }
 
-pub trait ControlCmd {
-  pub fn buildGui() -> Gui;
+#[derive(Deserialize, Serialize, Debug)]
+enum ControlCmd {
+  AddButton {
+    name: String,
+    label: Option<String>,
+  },
+  AddSlider {
+    name: String,
+    label: Option<String>,
+    orientation: Orientation,
+  },
+  AddXy {
+    name: String,
+    label: Option<String>,
+  },
+  AddLabel {
+    name: String,
+    label: String,
+  },
+  AddSizer {
+    orientation: Orientation,
+    proportions: Option<Vec<f32>>,
+    cmds: Vec<ControlCmd>,
+  },
+  SetColor {
+    color: Color,
+    hexstring: String,
+  },
 }
 
-pub struct add_button {
-  name: String,
-  label: Option<String>,
-}
-pub struct add_slider {
-   name: String,
-   label: Option<String>,
-   orientation: Orientation,
-}
-pub struct add_xy {
-  name: String,
-  label: Option<String>,
-}
-pub struct add_label {
-  name: String,
-  label: String,
-}
-pub struct add_sizer {
-  orientation: Orientation,
-  proportions: Option<Vec<f32>>,
-  cmds: Vec<ControlCmd>,
-}
-pub struct set_color {
-  color: Color,
-  hexstring: &str,
-}
-
-
-  // pub fn end_sizer(&mut self) -> Result<&mut Gui, FError> {
-  // pub fn to_root(self) -> Result<Root, FError> {
-  // pub fn next_id(&self) -> Result<Vec<i32>, FError> {
-  // pub fn add_control(&mut self, control: Box<dyn Control>) -> Result<&mut Gui, FError> {
-
-
-
-
-
-
-
-
-
-
-
+// pub fn end_sizer(&mut self) -> Result<&mut Gui, FError> {
+// pub fn to_root(self) -> Result<Root, FError> {
+// pub fn next_id(&self) -> Result<Vec<i32>, FError> {
+// pub fn add_control(&mut self, control: Box<dyn Control>) -> Result<&mut Gui, FError> {

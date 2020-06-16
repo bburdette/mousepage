@@ -23,21 +23,14 @@ use inputbot::{MouseButton, MouseCursor, KeybdKey};
 #[cfg(target_os = "windows")]
 use inputbot::{MouseButton, MouseCursor, MouseWheel, KeybdKey};
 
+mod buildlisp;
+
+use buildlisp::{Prefs};
+
 extern crate serde;
 extern crate serde_json;
 extern crate serde_lexpr;
 use serde::{Deserialize, Serialize};
-
-#[derive(Deserialize, Serialize, Debug)]
-struct Prefs {
-  xmult: f32,
-  ymult: f32,
-  max_tap_duration: u32,
-  show_press_duration: bool,
-  scroll_threshold: i32,
-  html_port: i32,
-  websocket_port: i32,
-}
 
 fn default_prefs() -> Prefs {
   Prefs {
