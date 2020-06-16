@@ -19,13 +19,18 @@ use touchpage::websocketserver;
 // use serde_lexpr::{to_string_pretty, from_str}
 
 #[cfg(target_os = "linux")]
-use inputbot::{MouseButton, MouseCursor, KeybdKey};
+use inputbot::{KeybdKey, MouseButton, MouseCursor};
 #[cfg(target_os = "windows")]
-use inputbot::{MouseButton, MouseCursor, MouseWheel, KeybdKey};
+use inputbot::{KeybdKey, MouseButton, MouseCursor, MouseWheel};
 
 mod buildlisp;
 
-use buildlisp::{Prefs};
+use buildlisp::{
+  ControlCmd::{AddLabel, AddSizer},
+  NewGui, Prefs,
+};
+
+use buildlisp as BL;
 
 extern crate serde;
 extern crate serde_json;
@@ -45,6 +50,31 @@ fn default_prefs() -> Prefs {
 }
 
 fn main() {
+  /*  let ng = NewGui {
+    title: "Meh".to_string(),
+    cmd: AddSizer {
+      orientation: BL::Orientation::Horizontal,
+      cmds: vec! [
+        AddLabel { name: "meh2".to_string(), label: "lab".to_string() },
+        AddLabel { name: "meh3".to_string(), label: "lab".to_string() } ]
+    }
+  };
+
+  match serde_lexpr::to_string_custom(&ng) {
+    Err(e) => {
+      println!("error converting prefs to s-expression: {:?}", e);
+      return;
+      }
+    Ok(s) => {
+      match write_string(s.as_str(), "ng.json")
+      {
+        Err(e) => println!("error writing wat file: {:?}", e),
+        _ => println!("wrote default wat to {}", "wat"),
+      }
+      return;
+    }
+  };*/
+
   // read in the settings json.
   let args = env::args();
   let mut iter = args.skip(1); // skip the program name
@@ -66,10 +96,9 @@ fn main() {
             Err(e) => {
               println!("error converting prefs to s-expression: {:?}", e);
               return;
-              }
+            }
             Ok(s) => {
-              match write_string(s.as_str(), filename.as_str())
-              {
+              match write_string(s.as_str(), filename.as_str()) {
                 Err(e) => println!("error writing prefs file: {:?}", e),
                 _ => println!("wrote default prefs to {}", filename),
               }
@@ -301,25 +330,25 @@ impl ControlUpdateProcessor for MouseUpdate {
             };
           } else if name == "CZ" {
             if pr {
-               KeybdKey::LControlKey.press();
-               KeybdKey::ZKey.press();
+              KeybdKey::LControlKey.press();
+              KeybdKey::ZKey.press();
             } else {
-               KeybdKey::ZKey.release();
-               KeybdKey::LControlKey.release();
+              KeybdKey::ZKey.release();
+              KeybdKey::LControlKey.release();
             }
           } else if name == "SR" {
             if pr {
-               KeybdKey::LShiftKey.press();
-               KeybdKey::RKey.press();
+              KeybdKey::LShiftKey.press();
+              KeybdKey::RKey.press();
             } else {
-               KeybdKey::RKey.release();
-               KeybdKey::LShiftKey.release();
+              KeybdKey::RKey.release();
+              KeybdKey::LShiftKey.release();
             }
           } else if name == "Space" {
             if pr {
-               KeybdKey::SpaceKey.press();
+              KeybdKey::SpaceKey.press();
             } else {
-               KeybdKey::SpaceKey.release();
+              KeybdKey::SpaceKey.release();
             }
           };
         });

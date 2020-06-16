@@ -1,7 +1,7 @@
 // use touchpage::controls::Orientation::{Horizontal, Vertical};
 // use touchpage::controls::Orientation;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use touchpage::guibuilder as G;
-use serde::{Deserialize, Serialize, Deserializer, Serializer};
 
 pub struct LispState {
   prefs: Prefs,
@@ -28,7 +28,7 @@ pub struct SetPrefs {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-enum Orientation {
+pub enum Orientation {
   Horizontal,
   Vertical,
 }
@@ -43,15 +43,18 @@ pub enum Color {
   Background,
 }
 
-
 #[derive(Deserialize, Serialize, Debug)]
 pub struct NewGui {
-  title: String,
-  cmds: Vec<ControlCmd>,
+  pub title: String,
+  pub cmd: ControlCmd,
 }
 
+// SetColor {
+//   color: Color,
+//   hexstring: String,
+// },
 #[derive(Deserialize, Serialize, Debug)]
-enum ControlCmd {
+pub enum ControlCmd {
   AddButton {
     name: String,
     label: Option<String>,
@@ -71,12 +74,8 @@ enum ControlCmd {
   },
   AddSizer {
     orientation: Orientation,
-    proportions: Option<Vec<f32>>,
+    // proportions: Option<Vec<f32>>,
     cmds: Vec<ControlCmd>,
-  },
-  SetColor {
-    color: Color,
-    hexstring: String,
   },
 }
 
