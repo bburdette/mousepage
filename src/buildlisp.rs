@@ -285,6 +285,28 @@ pub enum Control {
   },
 }
 
+fn get_proportion(c: &Control) -> Option<f32> {
+  match c {
+    Control::MouseButton {
+      label,
+      button,
+      proportion,
+    } => *proportion,
+    Control::MouseXy { label, proportion } => *proportion,
+    Control::ScrollButton { label, proportion } => *proportion,
+    Control::Key {
+      label,
+      keys,
+      proportion,
+    } => *proportion,
+    Control::Label { label, proportion } => *proportion,
+    Control::Sizer {
+      orientation,
+      controls,
+      proportion,
+    } => *proportion,
+  }
+}
 // mousepage UI
 pub fn build_gui(gui: Gui) -> Result<G::Gui, FError> {
   let mut mpgui = G::Gui::new_gui(gui.title);
@@ -314,43 +336,21 @@ pub fn add_control<'a>(gui: &'a mut G::Gui, control: &Control) -> Result<&'a mut
       controls,
       proportion,
     } => {
-      let mut g = gui.add_sizer(convert_orientation(orientation), None)?;
+      // make a proportion array.
+      let defaultprop: f32 = if (controls.len() > 0) {
+        (1.0 / f32::from(controls.len() as u16))
+      } else {
+        0.0
+      };
+      let mut props = Vec::new();
+      for c in controls {
+        props.push(get_proportion(c).unwrap_or(defaultprop));
+      }
+      let mut g = gui.add_sizer(convert_orientation(orientation), Some(props))?;
       for c in controls {
         g = add_control(g, c)?;
       }
-      // also get the proportion array.
       g.end_sizer()
     }
   }
 }
-
-/*#[derive(Deserialize, Serialize, Debug)]
-pub enum ControlCmd {
-  AddButton {
-    name: String,
-    label: Option<String>,
-  },
-  AddSlider {
-    name: String,
-    label: Option<String>,
-    orientation: Orientation,
-  },
-  AddXy {
-    name: String,
-    label: Option<String>,
-  },
-  AddLabel {
-    name: String,
-    label: String,
-  },
-  AddSizer {
-    orientation: Orientation,
-    // proportions: Option<Vec<f32>>,
-    cmds: Vec<ControlCmd>,
-  },
-}
-
-*/// pub fn end_sizer(&mut self) -> Result<&mut Gui, FError> {
-// pub fn to_root(self) -> Result<Root, FError> {
-// pub fn next_id(&self) -> Result<Vec<i32>, FError> {
-// pub fn add_control(&mut self, control: Box<dyn Control>) -> Result<&mut Gui, FError> {
