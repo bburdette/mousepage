@@ -26,8 +26,8 @@ use inputbot::{KeybdKey, MouseButton, MouseCursor, MouseWheel};
 mod buildlisp;
 
 use buildlisp::{
-  ControlCmd::{AddLabel, AddSizer},
-  NewGui, Prefs,
+  Control::{Label, Sizer, Key, ScrollButton, MouseXy},
+  Gui, Prefs,
 };
 
 use buildlisp as BL;
@@ -37,15 +37,75 @@ extern crate serde_json;
 extern crate serde_lexpr;
 use serde::{Deserialize, Serialize};
 
-fn default_prefs() -> Prefs {
-  Prefs {
-    xmult: 1000.0,
-    ymult: 1000.0,
-    max_tap_duration: 100,
-    show_press_duration: false,
-    scroll_threshold: 10,
-    html_port: 8000,
-    websocket_port: 9000,
+fn default_prefs() -> BL::Settings {
+  BL::Settings {
+    prefs: BL::Prefs {
+      xmult: 1000.0,
+      ymult: 1000.0,
+      max_tap_duration: 100,
+      show_press_duration: false,
+      scroll_threshold: 10,
+      html_port: 8000,
+      websocket_port: 9000,
+    },
+    gui: BL::Gui {
+      title: "Meh".to_string(),
+      control: Sizer {
+        orientation: BL::Orientation::Vertical,
+        controls: vec![
+          Sizer {
+          orientation: BL::Orientation::Horizontal,
+          controls: vec![
+            Label {
+              label: "lab1".to_string(),
+              proportion: None,
+            },
+            Label {
+              label: "lab2".to_string(),
+              proportion: None,
+            },
+          ],
+          proportion: None,
+        },
+        Sizer {
+          orientation: BL::Orientation::Horizontal,
+          proportion: None,
+          controls: vec![
+          BL::Control::MouseButton {
+            label: None,
+            button: BL::MouseButton::LeftButton,
+            proportion: None,
+          },
+          ScrollButton {
+            label: None,
+            proportion: None,
+          },
+          BL::Control::MouseButton {
+            label: None,
+            button: BL::MouseButton::RightButton,
+            proportion: None,
+          },]
+        },
+        MouseXy {
+          label: None,
+          proportion: None,
+        },
+        Sizer {
+          orientation: BL::Orientation::Horizontal,
+          proportion: None,
+          controls: vec![
+            Key {
+              label: None,
+              keys: vec![BL::KeybdKey::EnterKey],
+              proportion: None,
+            },
+            ]
+        },
+        ],
+          proportion: None,
+      },
+    },
+    colors: None,
   }
 }
 
@@ -118,7 +178,7 @@ fn main() {
     _ => (),
   }
 
-  let p = match prefs_filename {
+  let settings = match prefs_filename {
     Some(pf) => match load_string(pf.as_str()) {
       Ok(s) => match serde_lexpr::from_str(s.as_str()) {
         Ok(p) => p,
@@ -138,6 +198,8 @@ fn main() {
       default_prefs()
     }
   };
+
+  let p = settings.prefs;
 
   print!(
     "current prefs: {}\n",

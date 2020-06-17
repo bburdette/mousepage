@@ -3,13 +3,20 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use touchpage::guibuilder as G;
 
-pub struct LispState {
-  prefs: Prefs,
-  gui: Option<G::Gui>,
-}
+// pub struct LispState {
+//   prefs: Prefs,
+//   gui: Option<G::Gui>,
+// }
 
-pub trait LispCmd {
-  fn execute(state: LispState) -> Result<String, LispState>;
+// pub trait LispCmd {
+//   fn execute(state: LispState) -> Result<String, LispState>;
+// }
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct Settings {
+  pub prefs: Prefs,
+  pub gui: Gui,
+  pub colors: Option<Vec<SetColor>>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -21,10 +28,6 @@ pub struct Prefs {
   pub scroll_threshold: i32,
   pub html_port: i32,
   pub websocket_port: i32,
-}
-
-pub struct SetPrefs {
-  prefs: Prefs,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -43,17 +46,142 @@ pub enum Color {
   Background,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct NewGui {
-  pub title: String,
-  pub cmd: ControlCmd,
+#[derive(Deserialize, Serialize, Debug, Eq, PartialEq, Hash, Copy, Clone)]
+pub enum KeybdKey {
+  BackspaceKey,
+  TabKey,
+  EnterKey,
+  EscapeKey,
+  SpaceKey,
+  HomeKey,
+  LeftKey,
+  UpKey,
+  RightKey,
+  DownKey,
+  InsertKey,
+  DeleteKey,
+  Numrow0Key,
+  Numrow1Key,
+  Numrow2Key,
+  Numrow3Key,
+  Numrow4Key,
+  Numrow5Key,
+  Numrow6Key,
+  Numrow7Key,
+  Numrow8Key,
+  Numrow9Key,
+  AKey,
+  BKey,
+  CKey,
+  DKey,
+  EKey,
+  FKey,
+  GKey,
+  HKey,
+  IKey,
+  JKey,
+  KKey,
+  LKey,
+  MKey,
+  NKey,
+  OKey,
+  PKey,
+  QKey,
+  RKey,
+  SKey,
+  TKey,
+  UKey,
+  VKey,
+  WKey,
+  XKey,
+  YKey,
+  ZKey,
+  Numpad0Key,
+  Numpad1Key,
+  Numpad2Key,
+  Numpad3Key,
+  Numpad4Key,
+  Numpad5Key,
+  Numpad6Key,
+  Numpad7Key,
+  Numpad8Key,
+  Numpad9Key,
+  F1Key,
+  F2Key,
+  F3Key,
+  F4Key,
+  F5Key,
+  F6Key,
+  F7Key,
+  F8Key,
+  F9Key,
+  F10Key,
+  F11Key,
+  F12Key,
+  NumLockKey,
+  ScrollLockKey,
+  CapsLockKey,
+  LShiftKey,
+  RShiftKey,
+  LControlKey,
+  RControlKey,
+  OtherKey(u64),
 }
 
-// SetColor {
-//   color: Color,
-//   hexstring: String,
-// },
+#[derive(Deserialize, Serialize, Debug, Eq, PartialEq, Hash, Copy, Clone)]
+pub enum MouseButton {
+  LeftButton,
+  MiddleButton,
+  RightButton,
+  X1Button,
+  X2Button,
+  OtherButton(u32),
+}
+
 #[derive(Deserialize, Serialize, Debug)]
+pub struct Gui {
+  pub title: String,
+  pub control: Control,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct SetColor {
+  color: Color,
+  hexstring: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub enum Control {
+  MouseButton {
+    label: Option<String>,
+    button: MouseButton,
+    proportion: Option<f32>,
+  },
+  MouseXy {
+    label: Option<String>,
+    proportion: Option<f32>,
+  },
+  ScrollButton {
+    label: Option<String>,
+    proportion: Option<f32>,
+  },
+  Key {
+    label: Option<String>,
+    keys: Vec<KeybdKey>,
+    proportion: Option<f32>,
+  },
+  Label {
+    label: String,
+    proportion: Option<f32>,
+  },
+  Sizer {
+    orientation: Orientation,
+    controls: Vec<Control>,
+    proportion: Option<f32>,
+  },
+}
+
+/*#[derive(Deserialize, Serialize, Debug)]
 pub enum ControlCmd {
   AddButton {
     name: String,
@@ -79,7 +207,7 @@ pub enum ControlCmd {
   },
 }
 
-// pub fn end_sizer(&mut self) -> Result<&mut Gui, FError> {
+*/// pub fn end_sizer(&mut self) -> Result<&mut Gui, FError> {
 // pub fn to_root(self) -> Result<Root, FError> {
 // pub fn next_id(&self) -> Result<Vec<i32>, FError> {
 // pub fn add_control(&mut self, control: Box<dyn Control>) -> Result<&mut Gui, FError> {
