@@ -56,6 +56,17 @@ pub enum Color {
   Background,
 }
 
+fn convert_color(c: &Color) -> G::Color {
+  match c {
+    Color::Controls => G::Color::Controls,
+    Color::Labels => G::Color::Labels,
+    Color::Text => G::Color::Text,
+    Color::Pressed => G::Color::Pressed,
+    Color::Unpressed => G::Color::Unpressed,
+    Color::Background => G::Color::Background,
+  }
+}
+
 #[derive(Deserialize, Serialize, Debug, Eq, PartialEq, Hash, Copy, Clone)]
 pub enum KeybdKey {
   BackspaceKey,
@@ -250,8 +261,8 @@ pub struct Gui {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct SetColor {
-  color: Color,
-  hexstring: String,
+  pub color: Color,
+  pub hexstring: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -292,14 +303,23 @@ fn get_proportion(c: &Control) -> Option<f32> {
       button: _,
       proportion,
     } => *proportion,
-    Control::MouseXy { label: _, proportion } => *proportion,
-    Control::ScrollButton { label: _, proportion } => *proportion,
+    Control::MouseXy {
+      label: _,
+      proportion,
+    } => *proportion,
+    Control::ScrollButton {
+      label: _,
+      proportion,
+    } => *proportion,
     Control::Key {
       label: _,
       keys: _,
       proportion,
     } => *proportion,
-    Control::Label { label: _, proportion } => *proportion,
+    Control::Label {
+      label: _,
+      proportion,
+    } => *proportion,
     Control::Sizer {
       orientation: _,
       controls: _,
@@ -307,10 +327,17 @@ fn get_proportion(c: &Control) -> Option<f32> {
     } => *proportion,
   }
 }
+
+
 // mousepage UI
-pub fn build_gui(gui: Gui) -> Result<G::Gui, FError> {
+pub fn build_gui(gui: Gui, colors: Vec<SetColor>) -> Result<G::Gui, FError> {
   let mut mpgui = G::Gui::new_gui(gui.title);
   add_control(&mut mpgui, &gui.control)?;
+
+  for c in colors {
+    mpgui.set_color(convert_color(&c.color), &c.hexstring);
+  }
+  
   Ok(mpgui)
 }
 
@@ -321,16 +348,23 @@ pub fn add_control<'a>(gui: &'a mut G::Gui, control: &Control) -> Result<&'a mut
       button,
       proportion: _,
     } => gui.add_button(serde_lexpr::to_string(button)?, label.as_ref().cloned()),
-    Control::MouseXy { label, proportion: _ } => gui.add_xy("xy".to_string(), label.as_ref().cloned()),
-    Control::ScrollButton { label, proportion: _ } => {
-      gui.add_button("S".to_string(), label.as_ref().cloned())
-    }
+    Control::MouseXy {
+      label,
+      proportion: _,
+    } => gui.add_xy("xy".to_string(), label.as_ref().cloned()),
+    Control::ScrollButton {
+      label,
+      proportion: _,
+    } => gui.add_button("S".to_string(), label.as_ref().cloned()),
     Control::Key {
       label,
       keys,
-        proportion: _,
+      proportion: _,
     } => gui.add_button(serde_lexpr::to_string(keys)?, label.as_ref().cloned()),
-    Control::Label { label, proportion: _ } => gui.add_label("".to_string(), label.clone()),
+    Control::Label {
+      label,
+      proportion: _,
+    } => gui.add_label("".to_string(), label.clone()),
     Control::Sizer {
       orientation,
       controls,

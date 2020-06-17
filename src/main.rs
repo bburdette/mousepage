@@ -101,7 +101,9 @@ fn default_prefs() -> BL::Settings {
         proportion: None,
       },
     },
-    colors: None,
+    colors: Some(vec![BL::SetColor {
+      color: BL::Color::Controls,
+      hexstring: "meh".to_string()}]),
   }
 }
 
@@ -177,7 +179,7 @@ fn main() {
     serde_json::to_string_pretty(&p).unwrap_or("error serializing prefs".to_string())
   );
 
-  let rootv: Result<String, FError> = BL::build_gui(settings.gui)
+  let rootv: Result<String, FError> = BL::build_gui(settings.gui, settings.colors.unwrap_or(vec![]))
     .and_then(|gui| gui.to_root())
     .map(|root| J::serialize_root(&root))
     .and_then(|rootv| serde_json::to_string_pretty(&rootv).map_err(|_| err_msg("uh oh")));
