@@ -2,7 +2,7 @@
 // use touchpage::controls::Orientation;
 use failure::Error as FError;
 use inputbot as I;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use touchpage::controls as C;
 use touchpage::guibuilder as G;
 
@@ -288,21 +288,21 @@ pub enum Control {
 fn get_proportion(c: &Control) -> Option<f32> {
   match c {
     Control::MouseButton {
-      label,
-      button,
+      label: _,
+      button: _,
       proportion,
     } => *proportion,
-    Control::MouseXy { label, proportion } => *proportion,
-    Control::ScrollButton { label, proportion } => *proportion,
+    Control::MouseXy { label: _, proportion } => *proportion,
+    Control::ScrollButton { label: _, proportion } => *proportion,
     Control::Key {
-      label,
-      keys,
+      label: _,
+      keys: _,
       proportion,
     } => *proportion,
-    Control::Label { label, proportion } => *proportion,
+    Control::Label { label: _, proportion } => *proportion,
     Control::Sizer {
-      orientation,
-      controls,
+      orientation: _,
+      controls: _,
       proportion,
     } => *proportion,
   }
@@ -319,25 +319,25 @@ pub fn add_control<'a>(gui: &'a mut G::Gui, control: &Control) -> Result<&'a mut
     Control::MouseButton {
       label,
       button,
-      proportion,
+      proportion: _,
     } => gui.add_button(serde_lexpr::to_string(button)?, label.as_ref().cloned()),
-    Control::MouseXy { label, proportion } => gui.add_xy("xy".to_string(), label.as_ref().cloned()),
-    Control::ScrollButton { label, proportion } => {
+    Control::MouseXy { label, proportion: _ } => gui.add_xy("xy".to_string(), label.as_ref().cloned()),
+    Control::ScrollButton { label, proportion: _ } => {
       gui.add_button("S".to_string(), label.as_ref().cloned())
     }
     Control::Key {
       label,
       keys,
-      proportion,
+        proportion: _,
     } => gui.add_button(serde_lexpr::to_string(keys)?, label.as_ref().cloned()),
-    Control::Label { label, proportion } => gui.add_label("".to_string(), label.clone()),
+    Control::Label { label, proportion: _ } => gui.add_label("".to_string(), label.clone()),
     Control::Sizer {
       orientation,
       controls,
-      proportion,
+      proportion: _,
     } => {
       // make a proportion array.
-      let defaultprop: f32 = if (controls.len() > 0) {
+      let defaultprop: f32 = if controls.len() > 0 {
         (1.0 / f32::from(controls.len() as u16))
       } else {
         0.0

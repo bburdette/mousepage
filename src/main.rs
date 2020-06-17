@@ -11,23 +11,21 @@ use std::path::Path;
 use std::time::SystemTime;
 use touchpage::control_nexus::{ControlNexus, ControlUpdateProcessor};
 use touchpage::control_updates as cu;
-use touchpage::controls::Orientation::{Horizontal, Vertical};
-use touchpage::guibuilder as G;
 use touchpage::json as J;
 use touchpage::webserver;
 use touchpage::websocketserver;
 // use serde_lexpr::{to_string_pretty, from_str}
 
 #[cfg(target_os = "linux")]
-use inputbot::{KeybdKey, MouseButton, MouseCursor};
+use inputbot::{MouseButton, MouseCursor};
 #[cfg(target_os = "windows")]
-use inputbot::{KeybdKey, MouseButton, MouseCursor, MouseWheel};
+use inputbot::{MouseButton, MouseCursor, MouseWheel};
 
 mod buildlisp;
 
 use buildlisp::{
   Control::{Key, Label, MouseXy, ScrollButton, Sizer},
-  Gui, Prefs,
+   Prefs,
 };
 
 use buildlisp as BL;
@@ -35,7 +33,6 @@ use buildlisp as BL;
 extern crate serde;
 extern crate serde_json;
 extern crate serde_lexpr;
-use serde::{Deserialize, Serialize};
 
 fn default_prefs() -> BL::Settings {
   BL::Settings {
@@ -109,31 +106,6 @@ fn default_prefs() -> BL::Settings {
 }
 
 fn main() {
-  /*  let ng = NewGui {
-    title: "Meh".to_string(),
-    cmd: AddSizer {
-      orientation: BL::Orientation::Horizontal,
-      cmds: vec! [
-        AddLabel { name: "meh2".to_string(), label: "lab".to_string() },
-        AddLabel { name: "meh3".to_string(), label: "lab".to_string() } ]
-    }
-  };
-
-  match serde_lexpr::to_string_custom(&ng) {
-    Err(e) => {
-      println!("error converting prefs to s-expression: {:?}", e);
-      return;
-      }
-    Ok(s) => {
-      match write_string(s.as_str(), "ng.json")
-      {
-        Err(e) => println!("error writing wat file: {:?}", e),
-        _ => println!("wrote default wat to {}", "wat"),
-      }
-      return;
-    }
-  };*/
-
   // read in the settings json.
   let args = env::args();
   let mut iter = args.skip(1); // skip the program name
@@ -414,28 +386,6 @@ impl ControlUpdateProcessor for MouseUpdate {
       _ => (),
     };
   }
-}
-
-// mousepage UI
-fn build_gui() -> Result<G::Gui, FError> {
-  let mut gui = G::Gui::new_gui("mousepage".to_string());
-  gui
-    .add_sizer(Vertical, Some(vec![0.1, 0.5, 0.1]))?
-    .add_sizer(Horizontal, None)?
-    .add_button("LB".to_string(), Some("Left".to_string()))?
-    .add_button("S".to_string(), Some("Scroll".to_string()))?
-    .add_button("RB".to_string(), Some("Right".to_string()))?
-    .end_sizer()?
-    .add_xy("xy".to_string(), Some("xy".to_string()))?
-    .add_sizer(Horizontal, None)?
-    .add_button("CZ".to_string(), Some("Undo".to_string()))?
-    .add_button("SR".to_string(), Some("Rec New".to_string()))?
-    .add_button("Space".to_string(), Some("Play/Stop".to_string()))?
-    .end_sizer()?
-    .end_sizer()?
-    .set_color(G::Color::Controls, "001F00")
-    .set_color(G::Color::Text, "1F0000");
-  Ok(gui)
 }
 
 const ERRORUI: &'static str = r##"
