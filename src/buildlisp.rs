@@ -1,6 +1,8 @@
 // use touchpage::controls::Orientation::{Horizontal, Vertical};
 // use touchpage::controls::Orientation;
+use failure::Error as FError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use touchpage::controls as C;
 use touchpage::guibuilder as G;
 
 // pub struct LispState {
@@ -34,6 +36,13 @@ pub struct Prefs {
 pub enum Orientation {
   Horizontal,
   Vertical,
+}
+
+fn convert_orientation(o: &Orientation) -> C::Orientation {
+  match o {
+    Orientation::Horizontal => C::Orientation::Horizontal,
+    Orientation::Vertical => C::Orientation::Vertical,
+  }
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -179,6 +188,45 @@ pub enum Control {
     controls: Vec<Control>,
     proportion: Option<f32>,
   },
+}
+
+// mousepage UI
+fn build_gui(gui: Gui) -> Result<G::Gui, FError> {
+  let mut mpgui = G::Gui::new_gui(gui.title);
+  add_control(&mut mpgui, &gui.control)?;
+  Ok(mpgui)
+}
+
+pub fn add_control<'a>(gui: &'a mut G::Gui, control: &Control) -> Result<&'a mut G::Gui, FError> {
+  match control {
+    Control::MouseButton {
+      label,
+      button,
+      proportion,
+    } => gui.add_button(serde_lexpr::to_string(button)?, label.as_ref().cloned()),
+    Control::MouseXy { label, proportion } => gui.add_xy("xy".to_string(), label.as_ref().cloned()),
+    Control::ScrollButton { label, proportion } => {
+      gui.add_button("S".to_string(), label.as_ref().cloned())
+    }
+    Control::Key {
+      label,
+      keys,
+      proportion,
+    } => gui.add_button(serde_lexpr::to_string(keys)?, label.as_ref().cloned()),
+    Control::Label { label, proportion } => gui.add_label("".to_string(), label.clone()),
+    Control::Sizer {
+      orientation,
+      controls,
+      proportion,
+    } => {
+      let mut g = gui.add_sizer(convert_orientation(orientation), None)?;
+      for c in controls {
+        g = add_control(g, c)?;
+      }
+      // also get the proportion array.
+      g.end_sizer()
+    }
+  }
 }
 
 /*#[derive(Deserialize, Serialize, Debug)]
