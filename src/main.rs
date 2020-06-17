@@ -26,7 +26,7 @@ use inputbot::{KeybdKey, MouseButton, MouseCursor, MouseWheel};
 mod buildlisp;
 
 use buildlisp::{
-  Control::{Label, Sizer, Key, ScrollButton, MouseXy},
+  Control::{Key, Label, MouseXy, ScrollButton, Sizer},
   Gui, Prefs,
 };
 
@@ -54,55 +54,54 @@ fn default_prefs() -> BL::Settings {
         orientation: BL::Orientation::Vertical,
         controls: vec![
           Sizer {
-          orientation: BL::Orientation::Horizontal,
-          controls: vec![
-            Label {
-              label: "lab1".to_string(),
-              proportion: None,
-            },
-            Label {
-              label: "lab2".to_string(),
-              proportion: None,
-            },
-          ],
-          proportion: None,
-        },
-        Sizer {
-          orientation: BL::Orientation::Horizontal,
-          proportion: None,
-          controls: vec![
-          BL::Control::MouseButton {
-            label: None,
-            button: BL::MouseButton::LeftButton,
+            orientation: BL::Orientation::Horizontal,
+            controls: vec![
+              Label {
+                label: "lab1".to_string(),
+                proportion: None,
+              },
+              Label {
+                label: "lab2".to_string(),
+                proportion: None,
+              },
+            ],
             proportion: None,
           },
-          ScrollButton {
+          Sizer {
+            orientation: BL::Orientation::Horizontal,
+            proportion: None,
+            controls: vec![
+              BL::Control::MouseButton {
+                label: None,
+                button: BL::MouseButton::LeftButton,
+                proportion: None,
+              },
+              ScrollButton {
+                label: None,
+                proportion: None,
+              },
+              BL::Control::MouseButton {
+                label: None,
+                button: BL::MouseButton::RightButton,
+                proportion: None,
+              },
+            ],
+          },
+          MouseXy {
             label: None,
             proportion: None,
           },
-          BL::Control::MouseButton {
-            label: None,
-            button: BL::MouseButton::RightButton,
+          Sizer {
+            orientation: BL::Orientation::Horizontal,
             proportion: None,
-          },]
-        },
-        MouseXy {
-          label: None,
-          proportion: None,
-        },
-        Sizer {
-          orientation: BL::Orientation::Horizontal,
-          proportion: None,
-          controls: vec![
-            Key {
+            controls: vec![Key {
               label: None,
               keys: vec![BL::KeybdKey::EnterKey],
               proportion: None,
-            },
-            ]
-        },
+            }],
+          },
         ],
-          proportion: None,
+        proportion: None,
       },
     },
     colors: None,
@@ -206,7 +205,7 @@ fn main() {
     serde_json::to_string_pretty(&p).unwrap_or("error serializing prefs".to_string())
   );
 
-  let rootv: Result<String, FError> = build_gui()
+  let rootv: Result<String, FError> = BL::build_gui(settings.gui)
     .and_then(|gui| gui.to_root())
     .map(|root| J::serialize_root(&root))
     .and_then(|rootv| serde_json::to_string_pretty(&rootv).map_err(|_| err_msg("uh oh")));
@@ -368,52 +367,48 @@ impl ControlUpdateProcessor for MouseUpdate {
           _ => false,
         };
         cn.get_name(control_id).map(|name| {
-          if name == "LB" {
-            // left mouse.
-            if pr {
-              MouseButton::LeftButton.press()
-            } else {
-              MouseButton::LeftButton.release()
-            };
-          } else if name == "RB" {
-            // right mouse.
-            if pr {
-              MouseButton::RightButton.press()
-            } else {
-              MouseButton::RightButton.release()
-            };
-          } else if name == "S" {
-            // scroll.
-            if pr {
-              self.scroll_mode = true;
-              self.press_start = None;
-            } else {
-              self.scroll_mode = false;
-            };
-          } else if name == "CZ" {
-            if pr {
-              KeybdKey::LControlKey.press();
-              KeybdKey::ZKey.press();
-            } else {
-              KeybdKey::ZKey.release();
-              KeybdKey::LControlKey.release();
+          let mb: Result<BL::MouseButton, serde_lexpr::Error> =
+            serde_lexpr::from_str(name.as_str());
+          match mb {
+            Ok(blmb) => {
+              if pr {
+                BL::convert_mousebutton(&blmb).press()
+              } else {
+                BL::convert_mousebutton(&blmb).release()
+              }
             }
-          } else if name == "SR" {
-            if pr {
-              KeybdKey::LShiftKey.press();
-              KeybdKey::RKey.press();
-            } else {
-              KeybdKey::RKey.release();
-              KeybdKey::LShiftKey.release();
+            Err(_) => {
+              if name == "S" {
+                // scroll.
+                if pr {
+                  self.scroll_mode = true;
+                  self.press_start = None;
+                } else {
+                  self.scroll_mode = false;
+                };
+              } else {
+                // assume the name is a KeybdKey vec.
+                let keys: Vec<BL::KeybdKey> = match serde_lexpr::from_str(name.as_str()) {
+                  Ok(keys) => keys,
+                  Err(e) => {
+                    println!("key error: {:?}", e);
+                    vec![]
+                  }
+                };
+
+                if pr {
+                  for k in &keys {
+                    BL::convert_keybdkey(&k).press();
+                  }
+                } else {
+                  for k in keys.iter().rev() {
+                    BL::convert_keybdkey(&k).release();
+                  }
+                }
+              }
             }
-          } else if name == "Space" {
-            if pr {
-              KeybdKey::SpaceKey.press();
-            } else {
-              KeybdKey::SpaceKey.release();
-            }
-          };
-        });
+          }
+       });
         ()
       }
       _ => (),
