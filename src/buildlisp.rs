@@ -24,17 +24,14 @@ pub struct Prefs {
   pub websocket_port: i32,
 }
 
+// ---------------------------------------------------------------
+// enums for config.  in the prefs file just use them as symbols,
+// like (orientation . Vertical).  No need for quotes.
+// ---------------------------------------------------------------
 #[derive(Deserialize, Serialize, Debug)]
 pub enum Orientation {
   Horizontal,
   Vertical,
-}
-
-fn convert_orientation(o: &Orientation) -> C::Orientation {
-  match o {
-    Orientation::Horizontal => C::Orientation::Horizontal,
-    Orientation::Vertical => C::Orientation::Vertical,
-  }
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -45,17 +42,6 @@ pub enum Color {
   Pressed,
   Unpressed,
   Background,
-}
-
-fn convert_color(c: &Color) -> G::Color {
-  match c {
-    Color::Controls => G::Color::Controls,
-    Color::Labels => G::Color::Labels,
-    Color::Text => G::Color::Text,
-    Color::Pressed => G::Color::Pressed,
-    Color::Unpressed => G::Color::Unpressed,
-    Color::Background => G::Color::Background,
-  }
 }
 
 #[derive(Deserialize, Serialize, Debug, Eq, PartialEq, Hash, Copy, Clone)]
@@ -140,6 +126,38 @@ pub enum KeybdKey {
   OtherKey(u64),
 }
 
+#[derive(Deserialize, Serialize, Debug, Eq, PartialEq, Hash, Copy, Clone)]
+pub enum MouseButton {
+  LeftButton,
+  MiddleButton,
+  RightButton,
+  X1Button,
+  X2Button,
+  OtherButton(u32),
+}
+
+// ---------------------------------------------------------------
+// conversion functions since Serialize not implemented on these
+// types in the touchpage or inputbot libs.
+// ---------------------------------------------------------------
+fn convert_orientation(o: &Orientation) -> C::Orientation {
+  match o {
+    Orientation::Horizontal => C::Orientation::Horizontal,
+    Orientation::Vertical => C::Orientation::Vertical,
+  }
+}
+
+fn convert_color(c: &Color) -> G::Color {
+  match c {
+    Color::Controls => G::Color::Controls,
+    Color::Labels => G::Color::Labels,
+    Color::Text => G::Color::Text,
+    Color::Pressed => G::Color::Pressed,
+    Color::Unpressed => G::Color::Unpressed,
+    Color::Background => G::Color::Background,
+  }
+}
+
 pub fn convert_keybdkey(k: &KeybdKey) -> I::KeybdKey {
   match k {
     KeybdKey::BackspaceKey => I::KeybdKey::BackspaceKey,
@@ -221,16 +239,6 @@ pub fn convert_keybdkey(k: &KeybdKey) -> I::KeybdKey {
     KeybdKey::RControlKey => I::KeybdKey::RControlKey,
     KeybdKey::OtherKey(v) => I::KeybdKey::OtherKey(*v),
   }
-}
-
-#[derive(Deserialize, Serialize, Debug, Eq, PartialEq, Hash, Copy, Clone)]
-pub enum MouseButton {
-  LeftButton,
-  MiddleButton,
-  RightButton,
-  X1Button,
-  X2Button,
-  OtherButton(u32),
 }
 
 pub fn convert_mousebutton(mb: &MouseButton) -> I::MouseButton {
@@ -319,19 +327,6 @@ fn get_proportion(c: &Control) -> Option<f32> {
   }
 }
 
-
-// mousepage UI
-pub fn build_gui(gui: Gui, colors: Vec<SetColor>) -> Result<G::Gui, FError> {
-  let mut mpgui = G::Gui::new_gui(gui.title);
-  add_control(&mut mpgui, &gui.control)?;
-
-  for c in colors {
-    mpgui.set_color(convert_color(&c.color), &c.hexstring);
-  }
-  
-  Ok(mpgui)
-}
-
 pub fn add_control<'a>(gui: &'a mut G::Gui, control: &Control) -> Result<&'a mut G::Gui, FError> {
   match control {
     Control::MouseButton {
@@ -379,3 +374,16 @@ pub fn add_control<'a>(gui: &'a mut G::Gui, control: &Control) -> Result<&'a mut
     }
   }
 }
+
+// turn mousepage UI spec into touchpage UI.
+pub fn build_gui(gui: Gui, colors: Vec<SetColor>) -> Result<G::Gui, FError> {
+  let mut tpgui = G::Gui::new_gui(gui.title);
+  add_control(&mut tpgui, &gui.control)?;
+
+  for c in colors {
+    tpgui.set_color(convert_color(&c.color), &c.hexstring);
+  }
+  Ok(mpgui)
+}
+
+
