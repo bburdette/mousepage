@@ -11,7 +11,7 @@ start the server with `mousepage <config file>`, navigate to the page with your 
 
 **prefs**
 
-Prefs are in s-expression format.  Here's the default prefs with some explanatory comments.
+Prefs are in s-expression format.  Here's the example prefs with some explanatory comments.
 
 ```
 ((prefs (xmult . 1000.0)  ; prefs section for port and some mouse feel params.
