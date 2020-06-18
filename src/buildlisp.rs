@@ -383,7 +383,7 @@ pub fn build_gui(gui: Gui, colors: Vec<SetColor>) -> Result<G::Gui, FError> {
   for c in colors {
     tpgui.set_color(convert_color(&c.color), &c.hexstring);
   }
-  Ok(mpgui)
+  Ok(tpgui)
 }
 
 
