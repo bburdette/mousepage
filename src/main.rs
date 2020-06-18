@@ -46,7 +46,7 @@ fn default_prefs() -> BL::Settings {
       websocket_port: 9000,
     },
     gui: BL::Gui {
-      title: "Meh".to_string(),
+      title: "example".to_string(),
       control: Sizer {
         orientation: BL::Orientation::Vertical,
         controls: vec![
@@ -54,31 +54,31 @@ fn default_prefs() -> BL::Settings {
             orientation: BL::Orientation::Horizontal,
             controls: vec![
               Label {
-                label: "lab1".to_string(),
+                label: "label1".to_string(),
                 proportion: None,
               },
               Label {
-                label: "lab2".to_string(),
+                label: "label2".to_string(),
                 proportion: None,
               },
             ],
-            proportion: None,
+            proportion: Some(0.1),
           },
           Sizer {
             orientation: BL::Orientation::Horizontal,
-            proportion: None,
+            proportion: Some(0.1),
             controls: vec![
               BL::Control::MouseButton {
-                label: None,
+                label: Some("L".to_string()),
                 button: BL::MouseButton::LeftButton,
                 proportion: None,
               },
               ScrollButton {
-                label: None,
+                label: Some("Scroll".to_string()),
                 proportion: None,
               },
               BL::Control::MouseButton {
-                label: None,
+                label: Some("R".to_string()),
                 button: BL::MouseButton::RightButton,
                 proportion: None,
               },
@@ -86,15 +86,15 @@ fn default_prefs() -> BL::Settings {
           },
           MouseXy {
             label: None,
-            proportion: None,
+            proportion: Some(0.5),
           },
           Sizer {
             orientation: BL::Orientation::Horizontal,
             proportion: None,
             controls: vec![Key {
-              label: None,
+              label: Some("Enter Key".to_string()),
               keys: vec![BL::KeybdKey::EnterKey],
-              proportion: None,
+              proportion: Some(0.1),
             }],
           },
         ],
@@ -102,8 +102,8 @@ fn default_prefs() -> BL::Settings {
       },
     },
     colors: Some(vec![BL::SetColor {
-      color: BL::Color::Controls,
-      hexstring: "meh".to_string()}]),
+      color: BL::Color::Text,
+      hexstring: "FF0000".to_string()}]),
   }
 }
 
