@@ -19,7 +19,7 @@ In addition to the mouse controls, the vlc config has various buttons that cause
 
 Prefs are in s-expression format.  Here's the example prefs with some explanatory comments.
 
-```
+```Scheme
 ((prefs (xmult . 1000.0)  ; prefs section for port and some mouse feel params.
         (ymult . 1000.0)
         (max_tap_duration . 100)
