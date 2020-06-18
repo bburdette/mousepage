@@ -11,41 +11,99 @@ use std::path::Path;
 use std::time::SystemTime;
 use touchpage::control_nexus::{ControlNexus, ControlUpdateProcessor};
 use touchpage::control_updates as cu;
-use touchpage::controls::Orientation::{Horizontal, Vertical};
-use touchpage::guibuilder as G;
 use touchpage::json as J;
 use touchpage::webserver;
 use touchpage::websocketserver;
+// use serde_lexpr::{to_string_pretty, from_str}
 
 #[cfg(target_os = "linux")]
 use inputbot::{MouseButton, MouseCursor};
 #[cfg(target_os = "windows")]
 use inputbot::{MouseButton, MouseCursor, MouseWheel};
 
+mod buildlisp;
+
+use buildlisp::{
+  Control::{Key, Label, MouseXy, ScrollButton, Sizer},
+   Prefs,
+};
+
+use buildlisp as BL;
+
 extern crate serde;
 extern crate serde_json;
-use serde::{Deserialize, Serialize};
+extern crate serde_lexpr;
 
-#[derive(Deserialize, Serialize, Debug)]
-struct Prefs {
-  xmult: f32,
-  ymult: f32,
-  max_tap_duration: u128,
-  show_press_duration: bool,
-  scroll_threshold: i32,
-  html_port: i32,
-  websocket_port: i32,
-}
-
-fn default_prefs() -> Prefs {
-  Prefs {
-    xmult: 1000.0,
-    ymult: 1000.0,
-    max_tap_duration: 100,
-    show_press_duration: false,
-    scroll_threshold: 10,
-    html_port: 8000,
-    websocket_port: 9000,
+fn default_prefs() -> BL::Settings {
+  BL::Settings {
+    prefs: BL::Prefs {
+      xmult: 1000.0,
+      ymult: 1000.0,
+      max_tap_duration: 100,
+      show_press_duration: false,
+      scroll_threshold: 10,
+      html_port: 8000,
+      websocket_port: 9000,
+    },
+    gui: BL::Gui {
+      title: "Meh".to_string(),
+      control: Sizer {
+        orientation: BL::Orientation::Vertical,
+        controls: vec![
+          Sizer {
+            orientation: BL::Orientation::Horizontal,
+            controls: vec![
+              Label {
+                label: "lab1".to_string(),
+                proportion: None,
+              },
+              Label {
+                label: "lab2".to_string(),
+                proportion: None,
+              },
+            ],
+            proportion: None,
+          },
+          Sizer {
+            orientation: BL::Orientation::Horizontal,
+            proportion: None,
+            controls: vec![
+              BL::Control::MouseButton {
+                label: None,
+                button: BL::MouseButton::LeftButton,
+                proportion: None,
+              },
+              ScrollButton {
+                label: None,
+                proportion: None,
+              },
+              BL::Control::MouseButton {
+                label: None,
+                button: BL::MouseButton::RightButton,
+                proportion: None,
+              },
+            ],
+          },
+          MouseXy {
+            label: None,
+            proportion: None,
+          },
+          Sizer {
+            orientation: BL::Orientation::Horizontal,
+            proportion: None,
+            controls: vec![Key {
+              label: None,
+              keys: vec![BL::KeybdKey::EnterKey],
+              proportion: None,
+            }],
+          },
+        ],
+        proportion: None,
+      },
+    },
+    colors: Some(vec![BL::SetColor {
+      color: BL::Color::Controls,
+      hexstring: "meh".to_string()}]),
   }
 }
 
@@ -67,17 +125,19 @@ fn main() {
       "--writeprefs" => match iter.next() {
         Some(filename) => {
           let p = default_prefs();
-          match write_string(
-            serde_json::to_string_pretty(&p)
-              .unwrap_or("error serializing prefs".to_string())
-              .as_str(),
-            filename.as_str(),
-          ) {
-            Err(e) => println!("error writing prefs file: {:?}", e),
-            _ => println!("wrote default prefs to {}", filename),
+          match serde_lexpr::to_string(&p) {
+            Err(e) => {
+              println!("error converting prefs to s-expression: {:?}", e);
+              return;
+            }
+            Ok(s) => {
+              match write_string(s.as_str(), filename.as_str()) {
+                Err(e) => println!("error writing prefs file: {:?}", e),
+                _ => println!("wrote default prefs to {}", filename),
+              }
+              return;
+            }
           }
-
-          return;
         }
         None => {
           println!("no filename supplied for --writeprefs option");
@@ -91,12 +151,12 @@ fn main() {
     _ => (),
   }
 
-  let p = match prefs_filename {
+  let settings = match prefs_filename {
     Some(pf) => match load_string(pf.as_str()) {
-      Ok(s) => match serde_json::from_str(s.as_str()) {
+      Ok(s) => match serde_lexpr::from_str(s.as_str()) {
         Ok(p) => p,
         Err(e) => {
-          println!("error loading prefs json: {}", e);
+          println!("error loading prefs: {}", e);
           default_prefs()
         }
       },
@@ -112,12 +172,14 @@ fn main() {
     }
   };
 
+  let p = settings.prefs;
+
   print!(
     "current prefs: {}\n",
     serde_json::to_string_pretty(&p).unwrap_or("error serializing prefs".to_string())
   );
 
-  let rootv: Result<String, FError> = build_gui()
+  let rootv: Result<String, FError> = BL::build_gui(settings.gui, settings.colors.unwrap_or(vec![]))
     .and_then(|gui| gui.to_root())
     .map(|root| J::serialize_root(&root))
     .and_then(|rootv| serde_json::to_string_pretty(&rootv).map_err(|_| err_msg("uh oh")));
@@ -256,7 +318,7 @@ impl ControlUpdateProcessor for MouseUpdate {
                     if self.prefs.show_press_duration {
                       println!("press duration: {}", duration.as_millis());
                     }
-                    if duration.as_millis() < self.prefs.max_tap_duration {
+                    if duration.as_millis() < self.prefs.max_tap_duration.into() {
                       MouseButton::LeftButton.press();
                       MouseButton::LeftButton.release();
                     }
@@ -279,52 +341,53 @@ impl ControlUpdateProcessor for MouseUpdate {
           _ => false,
         };
         cn.get_name(control_id).map(|name| {
-          if name == "LB" {
-            // left mouse.
-            if pr {
-              MouseButton::LeftButton.press()
-            } else {
-              MouseButton::LeftButton.release()
-            };
-          } else if name == "RB" {
-            // right mouse.
-            if pr {
-              MouseButton::RightButton.press()
-            } else {
-              MouseButton::RightButton.release()
-            };
-          } else if name == "S" {
-            // scroll.
-            if pr {
-              self.scroll_mode = true;
-              self.press_start = None;
-            } else {
-              self.scroll_mode = false;
-            };
-          };
-        });
+          let mb: Result<BL::MouseButton, serde_lexpr::Error> =
+            serde_lexpr::from_str(name.as_str());
+          match mb {
+            Ok(blmb) => {
+              if pr {
+                BL::convert_mousebutton(&blmb).press()
+              } else {
+                BL::convert_mousebutton(&blmb).release()
+              }
+            }
+            Err(_) => {
+              if name == "S" {
+                // scroll.
+                if pr {
+                  self.scroll_mode = true;
+                  self.press_start = None;
+                } else {
+                  self.scroll_mode = false;
+                };
+              } else {
+                // assume the name is a KeybdKey vec.
+                let keys: Vec<BL::KeybdKey> = match serde_lexpr::from_str(name.as_str()) {
+                  Ok(keys) => keys,
+                  Err(e) => {
+                    println!("key error: {:?}", e);
+                    vec![]
+                  }
+                };
+
+                if pr {
+                  for k in &keys {
+                    BL::convert_keybdkey(&k).press();
+                  }
+                } else {
+                  for k in keys.iter().rev() {
+                    BL::convert_keybdkey(&k).release();
+                  }
+                }
+              }
+            }
+          }
+       });
         ()
       }
       _ => (),
     };
   }
-}
-
-// mousepage UI
-fn build_gui() -> Result<G::Gui, FError> {
-  let mut gui = G::Gui::new_gui("mousepage".to_string());
-  gui
-    .add_sizer(Vertical, Some(vec![0.1, 0.5]))?
-    .add_sizer(Horizontal, None)?
-    .add_button("LB".to_string(), Some("Left".to_string()))?
-    .add_button("S".to_string(), Some("Scroll".to_string()))?
-    .add_button("RB".to_string(), Some("Right".to_string()))?
-    .end_sizer()?
-    .add_xy("xy".to_string(), Some("xy".to_string()))?
-    .end_sizer()?
-    .set_color(G::Color::Controls, "001F00")
-    .set_color(G::Color::Text, "1F0000");
-  Ok(gui)
 }
 
 const ERRORUI: &'static str = r##"
