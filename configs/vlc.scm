@@ -82,7 +82,7 @@
              (hexstring . "efeeef")
             )
            ((color . Unpressed)
-             (hexstring . "bfb5bf")
+             (hexstring . "b5bfbf")
             )
            ((color . Text)
              (hexstring . "1F0000")

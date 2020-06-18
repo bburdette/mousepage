@@ -6,15 +6,6 @@ use serde::{Deserialize, Serialize};
 use touchpage::controls as C;
 use touchpage::guibuilder as G;
 
-// pub struct LispState {
-//   prefs: Prefs,
-//   gui: Option<G::Gui>,
-// }
-
-// pub trait LispCmd {
-//   fn execute(state: LispState) -> Result<String, LispState>;
-// }
-
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Settings {
   pub prefs: Prefs,
