@@ -1,6 +1,8 @@
 # mousepage
-use your phone as a mouse for your computer!
+use your phone as a mouse for your computer!  also configure custom shortcut buttons for specific apps.
 
-start server, navigate to the page, use the XY area and the buttons to act like a mouse.
+configs for various apps are in configs/
 
-Anyone can do it, especially since there is zero security between the page and phone.  Have fun!
+currently there's an audacity config, a vlc config, and a plain mouse config.
+
+start the server with `mousepage <config file>`, navigate to the page with your phone or tablet, there you go.
