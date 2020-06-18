@@ -2,7 +2,7 @@
 name = "mousepage"
 description = "control your computer mouse with your phone, via a web page"
 repository = "https://github.com/bburdette/mousepage"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Ben Burdette <bburdette@gmail.com>"]
 edition = "2018"
 license = "BSD-3-Clause"
