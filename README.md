@@ -3,17 +3,23 @@ use your phone as a mouse for your computer!  also configure custom shortcut but
 
 configs for various apps are in configs/
 
-you can create an example prefs file with `mousepage --writeprefs <filename>`.
+you can create an (unformatted) example prefs file with `mousepage --writeprefs <filename>`.
 
 currently there's an audacity config, a vlc config, and a plain mouse config.
 
 start the server with `mousepage <config file>`, navigate to the page with your phone or tablet, there you go.
 
+**example ui**
+
+In addition to the mouse controls, the vlc config has various buttons that cause mousepage to issue shortcut key presses.
+
+![](images/vlc-half.jpg)
+
 **prefs**
 
 Prefs are in s-expression format.  Here's the example prefs with some explanatory comments.
 
-```
+```Scheme
 ((prefs (xmult . 1000.0)  ; prefs section for port and some mouse feel params.
         (ymult . 1000.0)
         (max_tap_duration . 100)
