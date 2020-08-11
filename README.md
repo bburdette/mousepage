@@ -9,6 +9,8 @@ currently there's an audacity config, a vlc config, and a plain mouse config.
 
 start the server with `mousepage <config file>`, navigate to the page with your phone or tablet, there you go.
 
+As of now, this works best in Chrome, with firefox you might need to prompt a resize event somehow or other.
+
 **example ui**
 
 In addition to the mouse controls, the vlc config has various buttons that cause mousepage to issue shortcut key presses.
