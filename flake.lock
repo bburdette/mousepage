@@ -1,0 +1,59 @@
+{
+  "nodes": {
+    "crate2nix": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1635600726,
+        "narHash": "sha256-Db0OWOlTT22e4n0a+4++TATQvd7DPOWrrUrwbL+HKrI=",
+        "owner": "kolloch",
+        "repo": "crate2nix",
+        "rev": "098e8827d826c62a3c676b6ede1222aeca71ec60",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kolloch",
+        "repo": "crate2nix",
+        "type": "github"
+      }
+    },
+    "flake-utils": {
+      "locked": {
+        "lastModified": 1634851050,
+        "narHash": "sha256-N83GlSGPJJdcqhUxSCS/WwW5pksYf3VP1M13cDRTSVA=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "c91f3de5adaf1de973b797ef7485e441a65b8935",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1635726418,
+        "narHash": "sha256-qdG+0f1dehnxfkUAu4s9q7wiTkD30kyRtJAynk9jMX4=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "c0b0059e8a4ffd9189f318afb2d16ca78bb415cc",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "crate2nix": "crate2nix",
+        "flake-utils": "flake-utils",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
