@@ -1,45 +1,54 @@
-# SPDX-FileCopyrightText: 2021 Serokell <https://serokell.io/>
-#
-# SPDX-License-Identifier: CC0-1.0
-
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs";
-    crate2nix = {
-      url = "github:kolloch/crate2nix";
-      flake = false;
-    };
     flake-utils.url = "github:numtide/flake-utils";
+    naersk.url = "github:nmattia/naersk";
   };
 
-  outputs = { self, nixpkgs, crate2nix, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-
-        crateName = "mousepage";
-
-        inherit (import "${crate2nix}/tools.nix" { inherit pkgs; })
-          generatedCargoNix;
-
-        project = import (generatedCargoNix {
-          name = crateName;
-          src = ./.;
-        }) {
-          inherit pkgs;
-          defaultCrateOverrides = pkgs.defaultCrateOverrides // {
-            # Crate dependency overrides go here
+  outputs = { self, nixpkgs, flake-utils, naersk }:
+    flake-utils.lib.eachDefaultSystem (
+      system: let
+        pkgs = nixpkgs.legacyPackages."${system}";
+        naersk-lib = naersk.lib."${system}";
+      in
+        rec {
+          # `nix build`
+          pname = "mousepage";
+          packages.${pname} = naersk-lib.buildPackage {
+            pname = pname;
+            root = ./.;
+            buildInputs = with pkgs; [
+              cargo
+              xorg.libXtst 
+              libinput 
+              xorg.libX11
+              openssl.dev 
+              pkgconfig
+              nix
+              ];
+            # OPENSSL_LIB_DIR=openssl.dev;
           };
-        };
+          defaultPackage = packages.${pname};
 
-      in {
-        packages.${crateName} = project.rootCrate.build;
+          # `nix run`
+          apps.hello-world = flake-utils.lib.mkApp {
+            drv = packages.hello-world;
+          };
+          defaultApp = apps.hello-world;
 
-        defaultPackage = self.packages.${system}.${crateName};
-
-        devShell = pkgs.mkShell {
-          inputsFrom = builtins.attrValues self.packages.${system};
-          buildInputs = [ pkgs.cargo pkgs.rust-analyzer pkgs.clippy ];
-        };
-      });
+          # `nix develop`
+          devShell = pkgs.mkShell {
+            nativeBuildInputs = with pkgs; [
+              cargo
+              rustc
+              xorg.libXtst
+              libinput 
+              xorg.libX11
+              openssl.dev 
+              pkgconfig
+              nix
+              ];
+            # OPENSSL_LIB_DIR=openssl.dev;
+          };
+        }
+    );
 }
